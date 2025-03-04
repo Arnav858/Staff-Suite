@@ -1,0 +1,633 @@
+import mysql.connector
+from prettytable import PrettyTable
+
+def delete_database():
+    try:
+        mydb = mysql.connector.connect(
+            host="localhost",
+            user="root",
+            password="12345"
+        )
+        cursor = mydb.cursor()
+        cursor.execute("DROP DATABASE IF EXISTS hotel_management")
+        print("Existing database deleted successfully!")
+    except Exception as e:
+        print("Error deleting existing database:", e)
+    finally:
+        if mydb and mydb.is_connected():
+            cursor.close()
+            mydb.close()
+
+def create_database():
+    try:
+        mydb = mysql.connector.connect(
+            host="localhost",
+            user="root",
+            password="12345"
+        )
+        cursor = mydb.cursor()
+        cursor.execute("CREATE DATABASE IF NOT EXISTS hotel_management")
+        print("Database created successfully!")
+    except Exception as e:
+        print("Error creating database:", e)
+    finally:
+        if mydb and mydb.is_connected():
+            cursor.close()
+            mydb.close()
+
+def create_tables():
+    try:
+        mydb = mysql.connector.connect(
+            host="localhost",
+            user="root",
+            password="12345",
+            database="hotel_management"
+        )
+        cursor = mydb.cursor()
+
+        cursor.execute("CREATE TABLE IF NOT EXISTS rooms ("
+                       "id INT AUTO_INCREMENT PRIMARY KEY,"
+                       "room_number INT,"
+                       "room_type VARCHAR(100),"
+                       "occupancy_status VARCHAR(20)"
+                       ")")
+        print("Rooms table created successfully!")
+
+        cursor.execute("CREATE TABLE IF NOT EXISTS guests ("
+                       "id INT AUTO_INCREMENT PRIMARY KEY,"
+                       "name VARCHAR(100),"
+                       "age INT,"
+                       "gender VARCHAR(10),"
+                       "phone VARCHAR(15),"
+                       "email VARCHAR(100)"
+                       ")")
+        print("Guests table created successfully!")
+
+        cursor.execute("CREATE TABLE IF NOT EXISTS bookings ("
+                       "id INT AUTO_INCREMENT PRIMARY KEY,"
+                       "guest_id INT,"
+                       "room_id INT,"
+                       "check_in_date DATE,"
+                       "check_out_date DATE,"
+                       "FOREIGN KEY (guest_id) REFERENCES guests(id),"
+                       "FOREIGN KEY (room_id) REFERENCES rooms(id)"
+                       ")")
+        print("Bookings table created successfully!")
+        
+    except Exception as e:
+        print("Error creating tables:", e)
+    finally:
+        if mydb and mydb.is_connected():
+            cursor.close()
+            mydb.close()
+
+def insert_sample_data():
+    try:
+        mydb = mysql.connector.connect(
+            host="localhost",
+            user="root",
+            password="12345",
+            database="hotel_management"
+        )
+        cursor = mydb.cursor()
+
+        cursor.execute("INSERT INTO rooms (room_number, room_type, occupancy_status) VALUES "
+                       "(101, 'Single', 'Available'), "
+                       "(102, 'Double', 'Occupied'), "
+                       "(103, 'Suite', 'Available'), "
+                       "(104, 'Single', 'Available'), "
+                       "(105, 'Double', 'Occupied'), "
+                       "(106, 'Suite', 'Available')")
+        print("Sample data inserted into rooms table successfully!")
+
+        cursor.execute("INSERT INTO guests (name, age, gender, phone, email) VALUES "
+                       "('Rahul Sharma', 40, 'Male', '9876543210', 'rahul@example.com'), "
+                       "('Priya Patel', 35, 'Female', '1234567890', 'priya@example.com'), "
+                       "('Amit Singh', 45, 'Male', '7890123456', 'amit@example.com')")
+        print("Sample data inserted into guests table successfully!")
+
+        cursor.execute("INSERT INTO bookings (guest_id, room_id, check_in_date, check_out_date) VALUES "
+                       "(1, 4, '2024-06-10', '2024-06-15'), "
+                       "(2, 5, '2024-06-12', '2024-06-17'), "
+                       "(3, 6, '2024-06-14', '2024-06-19')")
+        print("Sample data inserted into bookings table successfully!")
+
+        mydb.commit()
+    except Exception as e:
+        print("Error inserting sample data:", e)
+    finally:
+        if mydb and mydb.is_connected():
+            cursor.close()
+            mydb.close()
+
+def search_rooms_by_criteria(criteria):
+    try:
+        mydb = mysql.connector.connect(
+            host="localhost",
+            user="root",
+            password="12345",
+            database="hotel_management"
+        )
+        cursor = mydb.cursor()
+
+        query = "SELECT * FROM rooms WHERE room_number = %s OR room_type = %s"
+        cursor.execute(query, (criteria, criteria))
+        rooms = cursor.fetchall()
+
+        print("\nSearch Results:")
+        if rooms:
+            table = PrettyTable(['Room ID', 'Room Number', 'Room Type', 'Occupancy Status'])
+            for room in rooms:
+                table.add_row(room)
+            print(table)
+        else:
+            print("No rooms found matching the criteria.")
+    except Exception as e:
+        print("Error searching rooms:", e)
+    finally:
+        if mydb and mydb.is_connected():
+            cursor.close()
+            mydb.close()
+
+def update_room(room_id, new_room_number, new_room_type, new_occupancy_status):
+    try:
+        mydb = mysql.connector.connect(
+            host="localhost",
+            user="root",
+            password="12345",
+            database="hotel_management"
+        )
+        cursor = mydb.cursor()
+
+        query = "UPDATE rooms SET room_number = %s, room_type = %s, occupancy_status = %s WHERE id = %s"
+        cursor.execute(query, (new_room_number, new_room_type, new_occupancy_status, room_id))
+        mydb.commit()
+        print("Room updated successfully!")
+    except Exception as e:
+        print("Error updating room:", e)
+    finally:
+        if mydb and mydb.is_connected():
+            cursor.close()
+            mydb.close()
+
+def add_guest():
+    try:
+        mydb = mysql.connector.connect(
+            host="localhost",
+            user="root",
+            password="12345",
+            database="hotel_management"
+        )
+        cursor = mydb.cursor()
+
+        name = input("Enter guest name: ")
+        age = int(input("Enter guest age: "))
+        gender = input("Enter guest gender: ")
+        phone = input("Enter guest phone number: ")
+        email = input("Enter guest email: ")
+
+        cursor.execute("INSERT INTO guests (name, age, gender, phone, email) VALUES (%s, %s, %s, %s, %s)",
+                       (name, age, gender, phone, email))
+        mydb.commit()
+        print("Guest added successfully!")
+    except Exception as e:
+        print("Error adding guest:", e)
+    finally:
+        if mydb and mydb.is_connected():
+            cursor.close()
+            mydb.close()
+
+def view_guests():
+    try:
+        mydb = mysql.connector.connect(
+            host="localhost",
+            user="root",
+            password="12345",
+            database="hotel_management"
+        )
+        cursor = mydb.cursor()
+
+        cursor.execute("SELECT * FROM guests")
+        guests = cursor.fetchall()
+
+        print("\nGuests:")
+        if guests:
+            table = PrettyTable(['Guest ID', 'Name', 'Age', 'Gender', 'Phone', 'Email'])
+            for guest in guests:
+                table.add_row(guest)
+            print(table)
+        else:
+            print("No guests found.")
+    except Exception as e:
+        print("Error viewing guests:", e)
+    finally:
+        if mydb and mydb.is_connected():
+            cursor.close()
+            mydb.close()
+
+def update_guest(guest_id, new_name, new_age, new_gender, new_phone, new_email):
+    try:
+        mydb = mysql.connector.connect(
+            host="localhost",
+            user="root",
+            password="12345",
+            database="hotel_management"
+        )
+        cursor = mydb.cursor()
+
+        query = "UPDATE guests SET name = %s, age = %s, gender = %s, phone = %s, email = %s WHERE id = %s"
+        cursor.execute(query, (new_name, new_age, new_gender, new_phone, new_email, guest_id))
+        mydb.commit()
+        print("Guest information updated successfully!")
+    except Exception as e:
+        print("Error updating guest information:", e)
+    finally:
+        if mydb and mydb.is_connected():
+            cursor.close()
+            mydb.close()
+
+def delete_guest():
+    try:
+        mydb = mysql.connector.connect(
+            host="localhost",
+            user="root",
+            password="12345",
+            database="hotel_management"
+        )
+        cursor = mydb.cursor()
+
+        guest_id = int(input("Enter guest ID to delete: "))
+        cursor.execute("DELETE FROM guests WHERE id = %s", (guest_id,))
+        mydb.commit()
+        print("Guest deleted successfully!")
+    except Exception as e:
+        print("Error deleting guest:", e)
+    finally:
+        if mydb and mydb.is_connected():
+            cursor.close()
+            mydb.close()
+
+def book_room(guest_id, room_id, check_in_date, check_out_date):
+    try:
+        mydb = mysql.connector.connect(
+            host="localhost",
+            user="root",
+            password="12345",
+            database="hotel_management"
+        )
+        cursor = mydb.cursor()
+
+        cursor.execute("INSERT INTO bookings (guest_id, room_id, check_in_date, check_out_date) VALUES (%s, %s, %s, %s)",
+                       (guest_id, room_id, check_in_date, check_out_date))
+        mydb.commit()
+        print("Room booked successfully!")
+    except Exception as e:
+        print("Error booking room:", e)
+    finally:
+        if mydb and mydb.is_connected():
+            cursor.close()
+            mydb.close()
+
+def view_bookings():
+    try:
+        mydb = mysql.connector.connect(
+            host="localhost",
+            user="root",
+            password="12345",
+            database="hotel_management"
+        )
+        cursor = mydb.cursor()
+
+        cursor.execute("SELECT * FROM bookings")
+        bookings = cursor.fetchall()
+
+        print("\nBookings:")
+        if bookings:
+            table = PrettyTable(['Booking ID', 'Guest ID', 'Room ID', 'Check-in Date', 'Check-out Date'])
+            for booking in bookings:
+                table.add_row(booking)
+            print(table)
+        else:
+            print("No bookings found.")
+    except Exception as e:
+        print("Error viewing bookings:", e)
+    finally:
+        if mydb and mydb.is_connected():
+            cursor.close()
+            mydb.close()
+
+def cancel_booking():
+    try:
+        mydb = mysql.connector.connect(
+            host="localhost",
+            user="root",
+            password="12345",
+            database="hotel_management"
+        )
+        cursor = mydb.cursor()
+
+        booking_id = int(input("Enter booking ID to cancel: "))
+        cursor.execute("DELETE FROM bookings WHERE id = %s", (booking_id,))
+        mydb.commit()
+        print("Booking canceled successfully!")
+    except Exception as e:
+        print("Error canceling booking:", e)
+    finally:
+        if mydb and mydb.is_connected():
+            cursor.close()
+            mydb.close()
+
+def update_booking(booking_id, new_check_in_date, new_check_out_date):
+    try:
+        mydb = mysql.connector.connect(
+            host="localhost",
+            user="root",
+            password="12345",
+            database="hotel_management"
+        )
+        cursor = mydb.cursor()
+
+        query = "UPDATE bookings SET check_in_date = %s, check_out_date = %s WHERE id = %s"
+        cursor.execute(query, (new_check_in_date, new_check_out_date, booking_id))
+        mydb.commit()
+        print("Booking updated successfully!")
+    except Exception as e:
+        print("Error updating booking:", e)
+    finally:
+        if mydb and mydb.is_connected():
+            cursor.close()
+            mydb.close()
+
+def view_statistics():
+    try:
+        mydb = mysql.connector.connect(
+            host="localhost",
+            user="root",
+            password="12345",
+            database="hotel_management"
+        )
+        cursor = mydb.cursor()
+
+        # Count rooms
+        cursor.execute("SELECT COUNT(*) FROM rooms")
+        total_rooms = cursor.fetchone()[0]
+        print("Total Rooms:", total_rooms)
+
+        # Count guests
+        cursor.execute("SELECT COUNT(*) FROM guests")
+        total_guests = cursor.fetchone()[0]
+        print("Total Guests:", total_guests)
+
+        # Count bookings
+        cursor.execute("SELECT COUNT(*) FROM bookings")
+        total_bookings = cursor.fetchone()[0]
+        print("Total Bookings:", total_bookings)
+
+    except Exception as e:
+        print("Error viewing statistics:", e)
+    finally:
+        if mydb and mydb.is_connected():
+            cursor.close()
+            mydb.close()
+
+
+def main_menu():
+    print("\nHotel Management System")
+    print("1. Room Management")
+    print("2. Guest Management")
+    print("3. Booking Management")
+    print("4. View Statistics")
+    print("5. Exit")
+
+def room_management():
+    print("\nRoom Management Menu")
+    print("1. Add Room")
+    print("2. View Rooms")
+    print("3. Delete Room")
+    print("4. Update Room")
+    print("5. Search Rooms")
+    print("6. Back to Main Menu")
+    choice = input("Enter your choice: ")
+    if choice == '1':
+        add_room()
+    elif choice == '2':
+        view_rooms()
+    elif choice == '3':
+        delete_room()
+    elif choice == '4':
+        update_room_menu()
+    elif choice == '5':
+        search_rooms_menu()
+    elif choice == '6':
+        return
+    else:
+        print("Invalid choice. Please enter a valid option.")
+
+def add_room():
+    try:
+        mydb = mysql.connector.connect(
+            host="localhost",
+            user="root",
+            password="12345",
+            database="hotel_management"
+        )
+        cursor = mydb.cursor()
+
+        room_number = int(input("Enter room number: "))
+        room_type = input("Enter room type: ")
+        occupancy_status = input("Enter occupancy status: ")
+
+        cursor.execute("INSERT INTO rooms (room_number, room_type, occupancy_status) VALUES (%s, %s, %s)",
+                       (room_number, room_type, occupancy_status))
+        mydb.commit()
+        print("Room added successfully!")
+    except Exception as e:
+        print("Error adding room:", e)
+    finally:
+        if mydb and mydb.is_connected():
+            cursor.close()
+            mydb.close()
+
+def view_rooms():
+    try:
+        mydb = mysql.connector.connect(
+            host="localhost",
+            user="root",
+            password="12345",
+            database="hotel_management"
+        )
+        cursor = mydb.cursor()
+
+        cursor.execute("SELECT * FROM rooms")
+        rooms = cursor.fetchall()
+
+        print("\nRooms:")
+        if rooms:
+            table = PrettyTable(['Room ID', 'Room Number', 'Room Type', 'Occupancy Status'])
+            for room in rooms:
+                table.add_row(room)
+            print(table)
+        else:
+            print("No rooms found.")
+    except Exception as e:
+        print("Error viewing rooms:", e)
+    finally:
+        if mydb and mydb.is_connected():
+            cursor.close()
+            mydb.close()
+
+def delete_room():
+    try:
+        mydb = mysql.connector.connect(
+            host="localhost",
+            user="root",
+            password="12345",
+            database="hotel_management"
+        )
+        cursor = mydb.cursor()
+
+        room_id = int(input("Enter room ID to delete: "))
+        cursor.execute("DELETE FROM rooms WHERE id = %s", (room_id,))
+        mydb.commit()
+        print("Room deleted successfully!")
+    except Exception as e:
+        print("Error deleting room:", e)
+    finally:
+        if mydb and mydb.is_connected():
+            cursor.close()
+            mydb.close()
+
+def update_room_menu():
+    room_id = int(input("Enter room ID to update: "))
+    new_room_number = int(input("Enter new room number: "))
+    new_room_type = input("Enter new room type: ")
+    new_occupancy_status = input("Enter new occupancy status: ")
+    update_room(room_id, new_room_number, new_room_type, new_occupancy_status)
+
+def search_rooms_menu():
+    criteria = input("Enter room number or room type to search: ")
+    search_rooms_by_criteria(criteria)
+
+def guest_management():
+    print("\nGuest Management Menu")
+    print("1. Add Guest")
+    print("2. View Guests")
+    print("3. Update Guest Information")
+    print("4. Delete Guest")
+    print("5. Back to Main Menu")
+    choice = input("Enter your choice: ")
+    if choice == '1':
+        add_guest()
+    elif choice == '2':
+        view_guests()
+    elif choice == '3':
+        update_guest_menu()
+    elif choice == '4':
+        delete_guest()
+    elif choice == '5':
+        return
+    else:
+        print("Invalid choice. Please enter a valid option.")
+
+def update_guest_menu():
+    guest_id = int(input("Enter guest ID to update: "))
+    new_name = input("Enter new name: ")
+    new_age = int(input("Enter new age: "))
+    new_gender = input("Enter new gender: ")
+    new_phone = input("Enter new phone number: ")
+    new_email = input("Enter new email: ")
+    update_guest(guest_id, new_name, new_age, new_gender, new_phone, new_email)
+
+def booking_management():
+    print("\nBooking Management Menu")
+    print("1. Book Room")
+    print("2. View Bookings")
+    print("3. Cancel Booking")
+    print("4. Update Booking")
+    print("5. Back to Main Menu")
+    choice = input("Enter your choice: ")
+    if choice == '1':
+        book_room_menu()
+    elif choice == '2':
+        view_bookings()
+    elif choice == '3':
+        cancel_booking()
+    elif choice == '4':
+        update_booking_menu()
+    elif choice == '5':
+        return
+    else:
+        print("Invalid choice. Please enter a valid option.")
+
+def book_room_menu():
+    try:
+        mydb = mysql.connector.connect(
+            host="localhost",
+            user="root",
+            password="12345",
+            database="hotel_management"
+        )
+        cursor = mydb.cursor()
+
+        view_rooms()
+        room_id = int(input("Enter room ID to book: "))
+
+        view_guests()
+        guest_id = int(input("Enter guest ID: "))
+
+        check_in_date = input("Enter check-in date (YYYY-MM-DD): ")
+        check_out_date = input("Enter check-out date (YYYY-MM-DD): ")
+
+        cursor.execute("SELECT * FROM rooms WHERE id = %s", (room_id,))
+        room = cursor.fetchone()
+
+        if room[3] == 'Occupied':
+            print("Room is already occupied.")
+            return
+        else:
+            cursor.execute("UPDATE rooms SET occupancy_status = 'Occupied' WHERE id = %s", (room_id,))
+            mydb.commit()
+            print("Room status updated successfully.")
+
+            book_room(guest_id, room_id, check_in_date, check_out_date)
+
+    except Exception as e:
+        print("Error booking room:", e)
+    finally:
+        if mydb and mydb.is_connected():
+            cursor.close()
+            mydb.close()
+
+def update_booking_menu():
+    booking_id = int(input("Enter booking ID to update: "))
+    new_check_in_date = input("Enter new check-in date (YYYY-MM-DD): ")
+    new_check_out_date = input("Enter new check-out date (YYYY-MM-DD): ")
+    update_booking(booking_id, new_check_in_date, new_check_out_date)
+
+def main():
+    delete_database() # Added to delete the existing database
+    create_database()
+    create_tables()
+    insert_sample_data()
+    
+    print("Welcome to the Hotel Management System!")
+    while True:
+        main_menu()
+        choice = input("Enter your choice: ")
+
+        if choice == '1':
+            room_management()
+        elif choice == '2':
+            guest_management()
+        elif choice == '3':
+            booking_management()
+        elif choice == '4':
+            view_statistics()
+        elif choice == '5':
+            print("Exiting the program.")
+            break
+        else:
+            print("Invalid choice. Please enter a valid option.")
+
+if __name__ == "__main__":
+    main()
